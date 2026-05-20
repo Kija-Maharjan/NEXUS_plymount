@@ -1,0 +1,212 @@
+// ─────────────────────────────────────────────
+//  NEXUS AI — Plymouth Boot Script
+//  Recreates the HTML splash in Plymouth engine
+// ─────────────────────────────────────────────
+
+// ── SCREEN SETUP ──
+screen_width  = Window.GetWidth();
+screen_height = Window.GetHeight();
+cx = screen_width  / 2;
+cy = screen_height / 2;
+
+// ── BACKGROUND ──
+// Pitch black base
+Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
+Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
+
+// ── COLORS ──
+// White       = 1.0, 1.0, 1.0
+// Blue        = 0.494, 0.784, 0.941   (#7ec8f0)
+// Purple      = 0.416, 0.239, 0.910   (#6a3de8)
+// Dim white   = 0.6, 0.6, 0.6
+// Near black  = 0.1, 0.1, 0.1
+
+// ── LOGO SPRITE CANVAS ──
+// We draw NEXUS as individual letter sprites
+// N E X = white | U S = blue-purple gradient (we use blue as closest)
+
+logo_image = Image(screen_width, 120);
+logo_canvas = logo_image.GetCanvas();
+
+// Letter dimensions
+letter_w = 62;
+letter_h = 80;
+letter_gap = 8;
+total_w = (letter_w * 5) + (letter_gap * 4);
+start_x = (screen_width - total_w) / 2;
+start_y = 0;
+
+// Draw NEX in white
+logo_canvas.SetFillColor(1.0, 1.0, 1.0, 1.0);
+logo_canvas.SetFont("Sans Bold 64");
+
+logo_canvas.DrawText("N", start_x, start_y + letter_h);
+logo_canvas.DrawText("E", start_x + letter_w + letter_gap, start_y + letter_h);
+logo_canvas.DrawText("X", start_x + (letter_w + letter_gap) * 2, start_y + letter_h);
+
+// Draw US in blue (#7ec8f0)
+logo_canvas.SetFillColor(0.494, 0.784, 0.941, 1.0);
+logo_canvas.DrawText("U", start_x + (letter_w + letter_gap) * 3, start_y + letter_h);
+logo_canvas.DrawText("S", start_x + (letter_w + letter_gap) * 4, start_y + letter_h);
+
+logo_sprite = Sprite(logo_image);
+logo_sprite.SetPosition(0, cy - 80, 1);
+logo_sprite.SetOpacity(0);
+
+// ── "A I" SUBTITLE ──
+ai_image = Image(screen_width, 40);
+ai_canvas = ai_image.GetCanvas();
+ai_canvas.SetFillColor(0.6, 0.6, 0.6, 0.6);
+ai_canvas.SetFont("Sans 16");
+
+// Center "A  I" text
+ai_text_x = (screen_width / 2) - 20;
+ai_canvas.DrawText("A   I", ai_text_x, 28);
+
+ai_sprite = Sprite(ai_image);
+ai_sprite.SetPosition(0, cy + 15, 1);
+ai_sprite.SetOpacity(0);
+
+// ── LOADING BAR TRACK ──
+bar_width  = 180;
+bar_height = 2;
+bar_x = (screen_width  - bar_width)  / 2;
+bar_y = cy + 60;
+
+track_image = Image(bar_width, bar_height);
+track_canvas = track_image.GetCanvas();
+track_canvas.SetFillColor(0.1, 0.1, 0.1, 1.0);
+track_canvas.Rectangle(0, 0, bar_width, bar_height);
+
+track_sprite = Sprite(track_image);
+track_sprite.SetPosition(bar_x, bar_y, 1);
+track_sprite.SetOpacity(0);
+
+// ── LOADING BAR FILL ──
+bar_fill_sprite = Sprite();
+bar_fill_sprite.SetPosition(bar_x, bar_y, 2);
+bar_fill_sprite.SetOpacity(0);
+
+// Pre-render full gradient bar for performance
+full_bar_image = Image(bar_width, bar_height);
+full_bar_canvas = full_bar_image.GetCanvas();
+for (px = 0; px < bar_width; px++) {
+    t = px / bar_width;
+    r = 0.494 + (0.416 - 0.494) * t;
+    g = 0.784 + (0.239 - 0.784) * t;
+    b = 0.941 + (0.910 - 0.941) * t;
+    full_bar_canvas.SetFillColor(r, g, b, 1.0);
+    full_bar_canvas.Rectangle(px, 0, 1, bar_height);
+}
+
+// Initialize bar fill with 1px image so sprite is never empty
+init_fill = Image(1, bar_height);
+init_canvas = init_fill.GetCanvas();
+init_canvas.SetFillColor(0.494, 0.784, 0.941, 1.0);
+init_canvas.Rectangle(0, 0, 1, bar_height);
+bar_fill_sprite.SetImage(init_fill);
+
+// ── BACKGROUND GLOW ──
+// Subtle purple radial glow behind logo
+glow_size = 300;
+glow_image = Image(glow_size, glow_size);
+glow_canvas = glow_image.GetCanvas();
+
+// Draw soft radial gradient circles for glow
+fun DrawGlow(canvas, size) {
+    steps = 30;
+    for (i = 0; i < steps; i++) {
+        r = (size / 2) * (1.0 - i / steps);
+        alpha = 0.015 * (i / steps);
+        canvas.SetFillColor(0.416, 0.239, 0.910, alpha);
+        canvas.Circle(size / 2, size / 2, r);
+    }
+}
+DrawGlow(glow_canvas, glow_size);
+
+glow_sprite = Sprite(glow_image);
+glow_sprite.SetPosition(cx - glow_size/2, cy - glow_size/2 + 20, 0);
+glow_sprite.SetOpacity(0.6);
+
+// ─────────────────────────────────────────────
+//  ANIMATION STATE
+// ─────────────────────────────────────────────
+time         = 0.0;
+fade_speed   = 0.03;
+
+logo_opacity = 0.0;
+ai_opacity   = 0.0;
+bar_opacity  = 0.0;
+
+// Boot progress (0..1) updated by Plymouth callback
+boot_progress = 0.0;
+
+// ─────────────────────────────────────────────
+//  DRAW BAR FILL — renders boot progress with gradient
+// ─────────────────────────────────────────────
+fun DrawBarFill(progress) {
+    fill_w = Math.Int(bar_width * progress);
+    if (fill_w < 1) fill_w = 1;
+    if (fill_w > bar_width) fill_w = bar_width;
+
+    cropped = full_bar_image.Crop(0, 0, fill_w, bar_height);
+
+    bar_fill_sprite.SetImage(cropped);
+    bar_fill_sprite.SetPosition(bar_x, bar_y, 2);
+}
+
+// ─────────────────────────────────────────────
+//  BOOT PROGRESS CALLBACK
+// ─────────────────────────────────────────────
+Plymouth.SetBootProgressFunction(fun(duration, progress) {
+    boot_progress = progress;
+});
+
+// ─────────────────────────────────────────────
+//  MAIN REFRESH LOOP
+// ─────────────────────────────────────────────
+Plymouth.SetRefreshFunction(fun() {
+    time = time + 1;
+
+    // ── FADE IN LOGO (frame 0–33) ──
+    if (time > 5) {
+        logo_opacity = Math.Min(logo_opacity + fade_speed, 1.0);
+        logo_sprite.SetOpacity(logo_opacity);
+    }
+
+    // ── FADE IN AI SUBTITLE (frame 17–50) ──
+    if (time > 17) {
+        ai_opacity = Math.Min(ai_opacity + fade_speed * 0.7, 1.0);
+        ai_sprite.SetOpacity(ai_opacity);
+    }
+
+    // ── FADE IN BAR (frame 33–60) ──
+    if (time > 33) {
+        bar_opacity = Math.Min(bar_opacity + fade_speed, 1.0);
+        track_sprite.SetOpacity(bar_opacity);
+        bar_fill_sprite.SetOpacity(bar_opacity);
+    }
+
+    // ── DRAW PROGRESS BAR ──
+    if (bar_opacity > 0.1) {
+        DrawBarFill(boot_progress);
+    }
+
+    // ── SUBTLE LOGO PULSE ──
+    if (logo_opacity >= 1.0) {
+        pulse = 0.85 + 0.15 * Math.Sin(time * 0.04);
+        logo_sprite.SetOpacity(pulse);
+    }
+});
+
+// ─────────────────────────────────────────────
+//  QUIT (transition to login screen)
+// ─────────────────────────────────────────────
+Plymouth.SetQuitFunction(fun() {
+    // Fade everything out
+    logo_sprite.SetOpacity(0);
+    ai_sprite.SetOpacity(0);
+    track_sprite.SetOpacity(0);
+    bar_fill_sprite.SetOpacity(0);
+    glow_sprite.SetOpacity(0);
+});
