@@ -29,11 +29,18 @@ if [[ ! -f "$SCRIPT_DIR/nexus.script" ]]; then
     echo "Error: nexus.script not found in $SCRIPT_DIR"
     exit 1
 fi
+if [[ ! -f "$SCRIPT_DIR/splash.png" ]]; then
+    echo "Error: splash.png not found in $SCRIPT_DIR"
+    echo "  Run: python3 generate_assets.py"
+    exit 1
+fi
 
 # Copy theme files
 mkdir -p "$THEME_DIR"
-cp "$SCRIPT_DIR/nexus.plymouth" "$THEME_DIR/"
-cp "$SCRIPT_DIR/nexus.script"   "$THEME_DIR/"
+cp "$SCRIPT_DIR/nexus.plymouth"    "$THEME_DIR/"
+cp "$SCRIPT_DIR/nexus.script"      "$THEME_DIR/"
+cp "$SCRIPT_DIR/splash.png"        "$THEME_DIR/"
+cp "$SCRIPT_DIR"/progress_*.png    "$THEME_DIR/"
 
 echo "[ NEXUS ] Files copied to $THEME_DIR"
 
