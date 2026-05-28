@@ -1,29 +1,7 @@
 [Plymouth Theme]
 Name=NEXUS AI
 Description=NEXUS AI Boot Splash - Neural Educational eXperience & Understanding System
-ModuleName=two-step
+ModuleName=script
 
-[two-step]
+[script]
 ImageDir=/usr/share/plymouth/themes/nexus
-HorizontalAlignment=0.5
-VerticalAlignment=0.5
-Transition=none
-TransitionDuration=0.0
-BackgroundStartColor=0x000000
-BackgroundEndColor=0x000000
-WatermarkHorizontalAlignment=0.5
-WatermarkVerticalAlignment=0.5
-MessageBelowAnimation=false
-SuppressMessages=true
-
-[boot-up]
-UseEndAnimation=false
-SuppressMessages=true
-
-[shutdown]
-UseEndAnimation=false
-SuppressMessages=true
-
-[reboot]
-UseEndAnimation=false
-SuppressMessages=true
