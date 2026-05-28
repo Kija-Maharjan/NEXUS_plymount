@@ -5,3 +5,4 @@ ModuleName=script
 
 [script]
 ImageDir=/usr/share/plymouth/themes/nexus
+ScriptFile=/usr/share/plymouth/themes/nexus/nexus.script
