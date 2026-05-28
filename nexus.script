@@ -66,11 +66,12 @@ Plymouth.SetDisplayMessageFunction(fun (text) {
 // ─────────────────────────────────────────────
 //  ANIMATION STATE
 // ─────────────────────────────────────────────
-time          = 0.0;
-fade_speed    = 0.03;
-bg_opacity    = 0.0;
-bar_opacity   = 0.0;
-boot_progress = 0.0;
+time             = 0.0;
+fade_speed       = 0.06;
+bg_opacity       = 0.0;
+bar_opacity      = 0.0;
+boot_progress    = 0.0;
+display_progress = 0.0;
 
 // ─────────────────────────────────────────────
 //  BOOT PROGRESS CALLBACK
@@ -98,9 +99,18 @@ Plymouth.SetRefreshFunction(fun() {
         status_sprite.SetOpacity(bar_opacity);
     }
 
+    // ── SMOOTH PROGRESS ──
+    // Smoothly chase boot_progress so the bar glides through frames
+    diff = boot_progress - display_progress;
+    if (Math.Abs(diff) > 0.001) {
+        display_progress = display_progress + diff * 0.25;
+    } else {
+        display_progress = boot_progress;
+    }
+
     // ── UPDATE PROGRESS BAR ──
     if (bar_opacity > 0.1) {
-        idx = Math.Int(boot_progress * (progress_frames - 1));
+        idx = Math.Int(display_progress * (progress_frames - 1));
         if (idx < 0) idx = 0;
         if (idx >= progress_frames) idx = progress_frames - 1;
         progress_bar.SetImage(progress_images[idx]);
