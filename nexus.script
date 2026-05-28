@@ -1,159 +1,108 @@
 // ─────────────────────────────────────────────
 //  NEXUS AI — Plymouth Boot Script
-//  Recreates the HTML splash in Plymouth engine
+//  Uses only actual Plymouth script API
 // ─────────────────────────────────────────────
 
 // ── SCREEN SETUP ──
 screen_width  = Window.GetWidth();
 screen_height = Window.GetHeight();
-cx = screen_width  / 2;
-cy = screen_height / 2;
 
 // ── BACKGROUND ──
-// Pitch black base
 Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
 Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
 
-// ── COLORS ──
-// White       = 1.0, 1.0, 1.0
-// Blue        = 0.494, 0.784, 0.941   (#7ec8f0)
-// Purple      = 0.416, 0.239, 0.910   (#6a3de8)
-// Dim white   = 0.6, 0.6, 0.6
-// Near black  = 0.1, 0.1, 0.1
+// ── BACKGROUND SPLASH ──
+bg = Image("splash.png");
+bg = bg.Scale(screen_width, screen_height);
+bg_sprite = Sprite(bg);
+bg_sprite.SetPosition(0, 0, 0);
+bg_sprite.SetOpacity(0);
 
-// ── LOGO SPRITE CANVAS ──
-// We draw NEXUS as individual letter sprites
-// N E X = white | U S = blue-purple gradient (we use blue as closest)
+// ── THROBBER IMAGES ──
+throbber_frames = 23;
+throbber_images = [];
+throbber_images[0]  = Image("throbber-0000.png");
+throbber_images[1]  = Image("throbber-0001.png");
+throbber_images[2]  = Image("throbber-0002.png");
+throbber_images[3]  = Image("throbber-0003.png");
+throbber_images[4]  = Image("throbber-0004.png");
+throbber_images[5]  = Image("throbber-0005.png");
+throbber_images[6]  = Image("throbber-0006.png");
+throbber_images[7]  = Image("throbber-0007.png");
+throbber_images[8]  = Image("throbber-0008.png");
+throbber_images[9]  = Image("throbber-0009.png");
+throbber_images[10] = Image("throbber-0010.png");
+throbber_images[11] = Image("throbber-0011.png");
+throbber_images[12] = Image("throbber-0012.png");
+throbber_images[13] = Image("throbber-0013.png");
+throbber_images[14] = Image("throbber-0014.png");
+throbber_images[15] = Image("throbber-0015.png");
+throbber_images[16] = Image("throbber-0016.png");
+throbber_images[17] = Image("throbber-0017.png");
+throbber_images[18] = Image("throbber-0018.png");
+throbber_images[19] = Image("throbber-0019.png");
+throbber_images[20] = Image("throbber-0020.png");
+throbber_images[21] = Image("throbber-0021.png");
+throbber_images[22] = Image("throbber-0022.png");
 
-logo_image = Image(screen_width, 120);
-logo_canvas = logo_image.GetCanvas();
+throbber_sprite = Sprite(throbber_images[0]);
+throbber_x = (screen_width - 220) / 2;
+throbber_y = screen_height - 180;
+throbber_sprite.SetPosition(throbber_x, throbber_y, 1);
+throbber_sprite.SetOpacity(0);
 
-// Letter dimensions
-letter_w = 62;
-letter_h = 80;
-letter_gap = 8;
-total_w = (letter_w * 5) + (letter_gap * 4);
-start_x = (screen_width - total_w) / 2;
-start_y = 0;
+// ── PROGRESS BAR IMAGES ──
+progress_frames = 22;
+progress_images = [];
+progress_images[0]  = Image("progress_0000.png");
+progress_images[1]  = Image("progress_0001.png");
+progress_images[2]  = Image("progress_0002.png");
+progress_images[3]  = Image("progress_0003.png");
+progress_images[4]  = Image("progress_0004.png");
+progress_images[5]  = Image("progress_0005.png");
+progress_images[6]  = Image("progress_0006.png");
+progress_images[7]  = Image("progress_0007.png");
+progress_images[8]  = Image("progress_0008.png");
+progress_images[9]  = Image("progress_0009.png");
+progress_images[10] = Image("progress_0010.png");
+progress_images[11] = Image("progress_0011.png");
+progress_images[12] = Image("progress_0012.png");
+progress_images[13] = Image("progress_0013.png");
+progress_images[14] = Image("progress_0014.png");
+progress_images[15] = Image("progress_0015.png");
+progress_images[16] = Image("progress_0016.png");
+progress_images[17] = Image("progress_0017.png");
+progress_images[18] = Image("progress_0018.png");
+progress_images[19] = Image("progress_0019.png");
+progress_images[20] = Image("progress_0020.png");
+progress_images[21] = Image("progress_0021.png");
 
-// Draw NEX in white
-logo_canvas.SetFillColor(1.0, 1.0, 1.0, 1.0);
-logo_canvas.SetFont("Sans Bold 64");
+progress_bar = Sprite(progress_images[0]);
+progress_bar.SetPosition(throbber_x, throbber_y, 2);
+progress_bar.SetOpacity(0);
 
-logo_canvas.DrawText("N", start_x, start_y + letter_h);
-logo_canvas.DrawText("E", start_x + letter_w + letter_gap, start_y + letter_h);
-logo_canvas.DrawText("X", start_x + (letter_w + letter_gap) * 2, start_y + letter_h);
+// ── STATUS TEXT ──
+status_filler = Image(1, 1);
+status_sprite = Sprite(status_filler);
+status_sprite.SetPosition(0, 0, 3);
+status_sprite.SetOpacity(0);
 
-// Draw US in blue (#7ec8f0)
-logo_canvas.SetFillColor(0.494, 0.784, 0.941, 1.0);
-logo_canvas.DrawText("U", start_x + (letter_w + letter_gap) * 3, start_y + letter_h);
-logo_canvas.DrawText("S", start_x + (letter_w + letter_gap) * 4, start_y + letter_h);
-
-logo_sprite = Sprite(logo_image);
-logo_sprite.SetPosition(0, cy - 80, 1);
-logo_sprite.SetOpacity(0);
-
-// ── "A I" SUBTITLE ──
-ai_image = Image(screen_width, 40);
-ai_canvas = ai_image.GetCanvas();
-ai_canvas.SetFillColor(0.6, 0.6, 0.6, 0.6);
-ai_canvas.SetFont("Sans 16");
-
-// Center "A  I" text
-ai_text_x = (screen_width / 2) - 20;
-ai_canvas.DrawText("A   I", ai_text_x, 28);
-
-ai_sprite = Sprite(ai_image);
-ai_sprite.SetPosition(0, cy + 15, 1);
-ai_sprite.SetOpacity(0);
-
-// ── LOADING BAR TRACK ──
-bar_width  = 180;
-bar_height = 2;
-bar_x = (screen_width  - bar_width)  / 2;
-bar_y = cy + 60;
-
-track_image = Image(bar_width, bar_height);
-track_canvas = track_image.GetCanvas();
-track_canvas.SetFillColor(0.1, 0.1, 0.1, 1.0);
-track_canvas.Rectangle(0, 0, bar_width, bar_height);
-
-track_sprite = Sprite(track_image);
-track_sprite.SetPosition(bar_x, bar_y, 1);
-track_sprite.SetOpacity(0);
-
-// ── LOADING BAR FILL ──
-bar_fill_sprite = Sprite();
-bar_fill_sprite.SetPosition(bar_x, bar_y, 2);
-bar_fill_sprite.SetOpacity(0);
-
-// Pre-render full gradient bar for performance
-full_bar_image = Image(bar_width, bar_height);
-full_bar_canvas = full_bar_image.GetCanvas();
-for (px = 0; px < bar_width; px++) {
-    t = px / bar_width;
-    r = 0.494 + (0.416 - 0.494) * t;
-    g = 0.784 + (0.239 - 0.784) * t;
-    b = 0.941 + (0.910 - 0.941) * t;
-    full_bar_canvas.SetFillColor(r, g, b, 1.0);
-    full_bar_canvas.Rectangle(px, 0, 1, bar_height);
-}
-
-// Initialize bar fill with 1px image so sprite is never empty
-init_fill = Image(1, bar_height);
-init_canvas = init_fill.GetCanvas();
-init_canvas.SetFillColor(0.494, 0.784, 0.941, 1.0);
-init_canvas.Rectangle(0, 0, 1, bar_height);
-bar_fill_sprite.SetImage(init_fill);
-
-// ── BACKGROUND GLOW ──
-// Subtle purple radial glow behind logo
-glow_size = 300;
-glow_image = Image(glow_size, glow_size);
-glow_canvas = glow_image.GetCanvas();
-
-// Draw soft radial gradient circles for glow
-fun DrawGlow(canvas, size) {
-    steps = 30;
-    for (i = 0; i < steps; i++) {
-        r = (size / 2) * (1.0 - i / steps);
-        alpha = 0.015 * (i / steps);
-        canvas.SetFillColor(0.416, 0.239, 0.910, alpha);
-        canvas.Circle(size / 2, size / 2, r);
-    }
-}
-DrawGlow(glow_canvas, glow_size);
-
-glow_sprite = Sprite(glow_image);
-glow_sprite.SetPosition(cx - glow_size/2, cy - glow_size/2 + 20, 0);
-glow_sprite.SetOpacity(0.6);
+Plymouth.SetDisplayMessageFunction(fun (text) {
+    status_text = Image.Text(text, 0.8, 0.8, 0.8, 0.8, "Sans Bold 14", 1);
+    status_sprite.SetImage(status_text);
+    tw = status_text.GetWidth();
+    status_sprite.SetPosition((screen_width - tw) / 2, throbber_y + 30, 3);
+});
 
 // ─────────────────────────────────────────────
 //  ANIMATION STATE
 // ─────────────────────────────────────────────
-time         = 0.0;
-fade_speed   = 0.03;
-
-logo_opacity = 0.0;
-ai_opacity   = 0.0;
-bar_opacity  = 0.0;
-
-// Boot progress (0..1) updated by Plymouth callback
+time          = 0.0;
+fade_speed    = 0.03;
+bg_opacity    = 0.0;
+throb_opacity = 0.0;
+bar_opacity   = 0.0;
 boot_progress = 0.0;
-
-// ─────────────────────────────────────────────
-//  DRAW BAR FILL — renders boot progress with gradient
-// ─────────────────────────────────────────────
-fun DrawBarFill(progress) {
-    fill_w = Math.Int(bar_width * progress);
-    if (fill_w < 1) fill_w = 1;
-    if (fill_w > bar_width) fill_w = bar_width;
-
-    cropped = full_bar_image.Crop(0, 0, fill_w, bar_height);
-
-    bar_fill_sprite.SetImage(cropped);
-    bar_fill_sprite.SetPosition(bar_x, bar_y, 2);
-}
 
 // ─────────────────────────────────────────────
 //  BOOT PROGRESS CALLBACK
@@ -168,45 +117,46 @@ Plymouth.SetBootProgressFunction(fun(duration, progress) {
 Plymouth.SetRefreshFunction(fun() {
     time = time + 1;
 
-    // ── FADE IN LOGO (frame 0–33) ──
-    if (time > 5) {
-        logo_opacity = Math.Min(logo_opacity + fade_speed, 1.0);
-        logo_sprite.SetOpacity(logo_opacity);
+    // ── FADE IN BACKGROUND ──
+    if (time > 3) {
+        bg_opacity = Math.Min(bg_opacity + fade_speed, 1.0);
+        bg_sprite.SetOpacity(bg_opacity);
     }
 
-    // ── FADE IN AI SUBTITLE (frame 17–50) ──
-    if (time > 17) {
-        ai_opacity = Math.Min(ai_opacity + fade_speed * 0.7, 1.0);
-        ai_sprite.SetOpacity(ai_opacity);
+    // ── FADE IN THROBBER (delayed) ──
+    if (time > 15) {
+        throb_opacity = Math.Min(throb_opacity + fade_speed, 1.0);
+        throbber_sprite.SetOpacity(throb_opacity);
     }
 
-    // ── FADE IN BAR (frame 33–60) ──
-    if (time > 33) {
+    // ── CYCLE THROBBER FRAMES ──
+    if (throb_opacity > 0.1) {
+        frame = (Math.Int(time / 3)) % throbber_frames;
+        throbber_sprite.SetImage(throbber_images[frame]);
+    }
+
+    // ── FADE IN PROGRESS BAR ──
+    if (time > 30) {
         bar_opacity = Math.Min(bar_opacity + fade_speed, 1.0);
-        track_sprite.SetOpacity(bar_opacity);
-        bar_fill_sprite.SetOpacity(bar_opacity);
+        progress_bar.SetOpacity(bar_opacity);
+        status_sprite.SetOpacity(bar_opacity);
     }
 
-    // ── DRAW PROGRESS BAR ──
+    // ── UPDATE PROGRESS BAR ──
     if (bar_opacity > 0.1) {
-        DrawBarFill(boot_progress);
-    }
-
-    // ── SUBTLE LOGO PULSE ──
-    if (logo_opacity >= 1.0) {
-        pulse = 0.85 + 0.15 * Math.Sin(time * 0.04);
-        logo_sprite.SetOpacity(pulse);
+        idx = Math.Int(boot_progress * (progress_frames - 1));
+        if (idx < 0) idx = 0;
+        if (idx >= progress_frames) idx = progress_frames - 1;
+        progress_bar.SetImage(progress_images[idx]);
     }
 });
 
 // ─────────────────────────────────────────────
-//  QUIT (transition to login screen)
+//  QUIT
 // ─────────────────────────────────────────────
 Plymouth.SetQuitFunction(fun() {
-    // Fade everything out
-    logo_sprite.SetOpacity(0);
-    ai_sprite.SetOpacity(0);
-    track_sprite.SetOpacity(0);
-    bar_fill_sprite.SetOpacity(0);
-    glow_sprite.SetOpacity(0);
+    bg_sprite.SetOpacity(0);
+    throbber_sprite.SetOpacity(0);
+    progress_bar.SetOpacity(0);
+    status_sprite.SetOpacity(0);
 });
