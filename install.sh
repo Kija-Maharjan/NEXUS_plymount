@@ -13,23 +13,23 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-# Check required files
-for f in nexus.plymouth nexus.script splash.png watermark.png; do
-    if [[ ! -f "$SCRIPT_DIR/$f" ]]; then
-        echo "Error: $f not found. Run: python3 generate_assets.py"
-        exit 1
-    fi
-done
-
 echo "[ NEXUS ] Installing Plymouth theme..."
 mkdir -p "$THEME_DIR"
 
-# Copy all theme files
+# Copy theme files
 cp "$SCRIPT_DIR/nexus.plymouth"  "$THEME_DIR/"
 cp "$SCRIPT_DIR/nexus.script"    "$THEME_DIR/"
 cp "$SCRIPT_DIR/splash.png"      "$THEME_DIR/"
 cp "$SCRIPT_DIR/watermark.png"   "$THEME_DIR/"
 cp "$SCRIPT_DIR"/throbber-*.png  "$THEME_DIR/"
+
+# Replace debian logo with NEXUS logo
+if [[ -f "/usr/share/plymouth/debian-logo.png" ]]; then
+    cp /usr/share/plymouth/debian-logo.png /usr/share/plymouth/debian-logo.png.backup
+    echo "[ NEXUS ] Backed up debian-logo.png"
+fi
+cp "$SCRIPT_DIR/debian-logo.png" /usr/share/plymouth/debian-logo.png
+echo "[ NEXUS ] Replaced debian logo with NEXUS logo"
 
 echo "[ NEXUS ] Files copied to $THEME_DIR"
 
@@ -43,3 +43,6 @@ update-initramfs -u
 
 echo ""
 echo "✓ NEXUS Plymouth installed! Run: sudo reboot"
+echo ""
+echo "  To restore Debian logo later:"
+echo "  sudo cp /usr/share/plymouth/debian-logo.png.backup /usr/share/plymouth/debian-logo.png"
