@@ -27,7 +27,6 @@ cp "$SCRIPT_DIR/entry.png"           "$THEME_DIR/"
 cp "$SCRIPT_DIR/keyboard.png"        "$THEME_DIR/"
 cp "$SCRIPT_DIR/keymap-render.png"   "$THEME_DIR/"
 cp "$SCRIPT_DIR/lock.png"            "$THEME_DIR/"
-cp "$SCRIPT_DIR"/throbber-*.png      "$THEME_DIR/"
 cp "$SCRIPT_DIR"/progress_*.png      "$THEME_DIR/" 2>/dev/null || true
 
 # Replace debian logo with transparent placeholder
