@@ -46,8 +46,9 @@ throbber_images[21] = Image("throbber-0021.png");
 throbber_images[22] = Image("throbber-0022.png");
 
 throbber_sprite = Sprite(throbber_images[0]);
-throbber_x = (screen_width - 220) / 2;
-throbber_y = screen_height - 180;
+center_x = (screen_width - 220) / 2;
+throbber_x = center_x;
+throbber_y = screen_height - 220;
 throbber_sprite.SetPosition(throbber_x, throbber_y, 1);
 throbber_sprite.SetOpacity(0);
 
@@ -78,7 +79,7 @@ progress_images[20] = Image("progress_0020.png");
 progress_images[21] = Image("progress_0021.png");
 
 progress_bar = Sprite(progress_images[0]);
-progress_bar.SetPosition(throbber_x, throbber_y, 2);
+progress_bar.SetPosition(center_x, throbber_y + 60, 2);
 progress_bar.SetOpacity(0);
 
 // ── STATUS TEXT ──
@@ -91,7 +92,7 @@ Plymouth.SetDisplayMessageFunction(fun (text) {
     status_text = Image.Text(text, 0.8, 0.8, 0.8, 0.8, "Sans Bold 14", 1);
     status_sprite.SetImage(status_text);
     tw = status_text.GetWidth();
-    status_sprite.SetPosition((screen_width - tw) / 2, throbber_y + 30, 3);
+    status_sprite.SetPosition((screen_width - tw) / 2, throbber_y + 100, 3);
 });
 
 // ─────────────────────────────────────────────
@@ -123,8 +124,8 @@ Plymouth.SetRefreshFunction(fun() {
         bg_sprite.SetOpacity(bg_opacity);
     }
 
-    // ── FADE IN THROBBER (delayed) ──
-    if (time > 15) {
+    // ── FADE IN THROBBER ──
+    if (time > 2) {
         throb_opacity = Math.Min(throb_opacity + fade_speed, 1.0);
         throbber_sprite.SetOpacity(throb_opacity);
     }
@@ -136,7 +137,7 @@ Plymouth.SetRefreshFunction(fun() {
     }
 
     // ── FADE IN PROGRESS BAR ──
-    if (time > 30) {
+    if (time > 5) {
         bar_opacity = Math.Min(bar_opacity + fade_speed, 1.0);
         progress_bar.SetOpacity(bar_opacity);
         status_sprite.SetOpacity(bar_opacity);
