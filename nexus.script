@@ -11,12 +11,29 @@ screen_height = Window.GetHeight();
 Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
 Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
 
-// ── BACKGROUND SPLASH ──
-bg = Image("splash.png");
-bg = bg.Scale(screen_width, screen_height);
-bg_sprite = Sprite(bg);
-bg_sprite.SetPosition(0, 0, 0);
-bg_sprite.SetOpacity(0);
+// ── LOGO TEXT ──
+logo_text = Image.Text("NEX", 1.0, 1.0, 1.0, 1.0, "Sans Bold 64", "left");
+u_text = Image.Text("U", 0.49, 0.78, 0.94, 1.0, "Sans Bold 64", "left");
+s_text = Image.Text("S", 0.42, 0.24, 0.91, 1.0, "Sans Bold 64", "left");
+logo_sprite = Sprite(logo_text);
+u_sprite = Sprite(u_text);
+s_sprite = Sprite(s_text);
+
+letter_spacing = 6;
+logo_width = logo_text.GetWidth();
+u_width = u_text.GetWidth();
+s_width = s_text.GetWidth();
+total_width = logo_width + u_width + s_width + (letter_spacing * 2);
+logo_x = (screen_width - total_width) / 2;
+logo_base_y = (screen_height - logo_text.GetHeight()) / 2 - 20;
+
+logo_sprite.SetPosition(logo_x, logo_base_y, 2);
+u_sprite.SetPosition(logo_x + logo_width + letter_spacing, logo_base_y, 2);
+s_sprite.SetPosition(logo_x + logo_width + u_width + (letter_spacing * 2), logo_base_y, 2);
+
+logo_sprite.SetOpacity(0);
+u_sprite.SetOpacity(0);
+s_sprite.SetOpacity(0);
 
 // ── PROGRESS BAR IMAGES ──
 progress_frames = 22;
@@ -57,7 +74,7 @@ status_sprite.SetPosition(0, 0, 3);
 status_sprite.SetOpacity(0);
 
 Plymouth.SetDisplayMessageFunction(fun (text) {
-    status_text = Image.Text(text, 0.8, 0.8, 0.8, 0.8, "Sans Bold 14", 1);
+    status_text = Image.Text(text, 0.8, 0.8, 0.8, 0.8, "Sans Bold 14", "center");
     status_sprite.SetImage(status_text);
     tw = status_text.GetWidth();
     status_sprite.SetPosition((screen_width - tw) / 2, bar_y + 40, 3);
@@ -68,7 +85,7 @@ Plymouth.SetDisplayMessageFunction(fun (text) {
 // ─────────────────────────────────────────────
 time             = 0.0;
 fade_speed       = 0.06;
-bg_opacity       = 0.0;
+text_opacity     = 0.0;
 bar_opacity      = 0.0;
 boot_progress    = 0.0;
 display_progress = 0.0;
@@ -86,10 +103,28 @@ Plymouth.SetBootProgressFunction(fun(duration, progress) {
 Plymouth.SetRefreshFunction(fun() {
     time = time + 1;
 
-    // ── FADE IN BACKGROUND ──
+    // ── COLOR PULSE FOR U / S ──
+    pulse = (Math.Cos(time * 0.07) + 1.0) / 2.0;
+    u_r = 0.494 + (0.416 - 0.494) * pulse;
+    u_g = 0.784 + (0.239 - 0.784) * pulse;
+    u_b = 0.941 + (0.910 - 0.941) * pulse;
+    s_r = 0.494 + (0.416 - 0.494) * ((Math.Cos(time * 0.07 + Math.Pi / 4.0) + 1.0) / 2.0);
+    s_g = 0.784 + (0.239 - 0.784) * ((Math.Cos(time * 0.07 + Math.Pi / 4.0) + 1.0) / 2.0);
+    s_b = 0.941 + (0.910 - 0.941) * ((Math.Cos(time * 0.07 + Math.Pi / 4.0) + 1.0) / 2.0);
+
+    u_sprite.SetImage(Image.Text("U", u_r, u_g, u_b, 1.0, "Sans Bold 64", "left"));
+    s_sprite.SetImage(Image.Text("S", s_r, s_g, s_b, 1.0, "Sans Bold 64", "left"));
+
+    // ── FADE IN LOGO ──
     if (time > 3) {
-        bg_opacity = Math.Min(bg_opacity + fade_speed, 1.0);
-        bg_sprite.SetOpacity(bg_opacity);
+        text_opacity = Math.Min(text_opacity + fade_speed, 1.0);
+        current_y = logo_base_y + (1.0 - text_opacity) * 6.0;
+        logo_sprite.SetPosition(logo_x, current_y, 2);
+        u_sprite.SetPosition(logo_x + logo_width + letter_spacing, current_y, 2);
+        s_sprite.SetPosition(logo_x + logo_width + u_width + (letter_spacing * 2), current_y, 2);
+        logo_sprite.SetOpacity(text_opacity);
+        u_sprite.SetOpacity(text_opacity);
+        s_sprite.SetOpacity(text_opacity);
     }
 
     // ── FADE IN PROGRESS BAR ──
@@ -100,7 +135,6 @@ Plymouth.SetRefreshFunction(fun() {
     }
 
     // ── SMOOTH PROGRESS ──
-    // Smoothly chase boot_progress so the bar glides through frames
     diff = boot_progress - display_progress;
     if (Math.Abs(diff) > 0.001) {
         display_progress = display_progress + diff * 0.25;
@@ -110,7 +144,12 @@ Plymouth.SetRefreshFunction(fun() {
 
     // ── UPDATE PROGRESS BAR ──
     if (bar_opacity > 0.1) {
-        idx = Math.Int(display_progress * (progress_frames - 1));
+        if (boot_progress < 0.05) {
+            phase = (Math.Sin(time * 0.12) + 1.0) / 2.0;
+            idx = Math.Int(phase * (progress_frames - 1));
+        } else {
+            idx = Math.Int(display_progress * (progress_frames - 1));
+        }
         if (idx < 0) idx = 0;
         if (idx >= progress_frames) idx = progress_frames - 1;
         progress_bar.SetImage(progress_images[idx]);
@@ -121,7 +160,9 @@ Plymouth.SetRefreshFunction(fun() {
 //  QUIT
 // ─────────────────────────────────────────────
 Plymouth.SetQuitFunction(fun() {
-    bg_sprite.SetOpacity(0);
+    logo_sprite.SetOpacity(0);
+    u_sprite.SetOpacity(0);
+    s_sprite.SetOpacity(0);
     progress_bar.SetOpacity(0);
     status_sprite.SetOpacity(0);
 });
